@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>集結時間計算ツール</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      max-width: 640px;
+      margin: 24px auto;
+      line-height: 2;
+      padding: 0 12px;
+      background: #0d1b2a; /* ダークブルー背景 */
+      color: #e0f7fa;
+      font-size: 28px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 24px;
+      font-size: 40px;
+      color: #a8dadc;
+      text-shadow: 0 0 12px #1e6091;
+    }
+    h1::before { content: "❄️ "; }
+    h1::after { content: " ❄️"; }
+    label {
+      font-weight: bold;
+      margin-right: 8px;
+      font-size: 28px;
+      color: #f1faee;
+    }
+    select {
+      padding: 14px;
+      font-size: 28px;
+      margin-right: 6px;
+      background: #1b263b;
+      color: #e0f7fa;
+      border: 2px solid #457b9d;
+      border-radius: 6px;
+    }
+    input[type="radio"] {
+      transform: scale(2.0);
+      margin-right: 10px;
+    }
+    .row { margin: 28px 0; }
+    .radio-group { display: flex; gap: 24px; }
+    .buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .buttons button {
+      flex: 1;
+      padding: 20px;
+      font-size: 28px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .button-orange {
+      background: linear-gradient(135deg, #ff8c42, #e76f51);
+      color: #fff;
+      box-shadow: 0 0 12px rgba(255,140,66,0.6);
+    }
+    .button-blue {
+      background: linear-gradient(135deg, #0078d7, #005fa3);
+      color: #fff;
+      box-shadow: 0 0 12px rgba(0,120,215,0.6);
+    }
+    .result {
+      margin-top: 28px;
+      padding: 20px;
+      background: #1b263b;
+      border: 2px solid #457b9d;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 28px;
+      box-shadow: inset 0 0 20px #1e6091;
+    }
+    .result table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .result td {
+      padding: 6px 12px;
+      font-size: 28px;
+      vertical-align: middle;
+    }
+    .result td:first-child {
+      font-weight: bold;
+    }
+    .result span {
+      color: #a8dadc;
+      font-size: 32px;
+    }
+  </style>
+</head>
+<body>
+  <h1>集結時間計算ツール</h1>
+
+  <!-- ① 集結時間 -->
+  <div class="row">
+    <label>① 集結時間</label>
+    <div class="radio-group">
+      <label><input type="radio" name="d2" value="00:01:00" checked> 1分</label>
+      <label><input type="radio" name="d2" value="00:05:00"> 5分</label>
+    </div>
+  </div>
+
+  <!-- ② 行軍時間 -->
+  <div class="row">
+    <label>② 行軍時間</label><br>
+    <select id="d3hh"></select> 時
+    <select id="d3mm"></select> 分
+    <select id="d3ss"></select> 秒
+  </div>
+
+  <!-- ③ 到着時刻 -->
+  <div class="row">
+    <label>③ 到着時刻（UTC）</label><br>
+    <select id="t4hh"></select> 時
+    <select id="t4mm"></select> 分
+    <select id="t4ss"></select> 秒
+  </div>
+
+  <div class="buttons">
+    <button id="calc" class="button-orange">計算</button>
+    <button id="reset" class="button-blue">リセット</button>
+  </div>
+
+  <div class="result">
+    <table>
+      <tr>
+        <td>集結開始時刻（UTC）:</td>
+        <td><span id="t1utc">—</span></td>
+      </tr>
+      <tr>
+        <td>集結開始時刻（JST）:</td>
+        <td><span id="t1jst">—</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <script>
+    // セレクトボックス生成
+    function fillSelect(id, max) {
+      const sel = document.getElementById(id);
+      for (let i=0; i<max; i++) {
+        const opt = document.createElement("option");
+        opt.value = String(i).padStart(2,"0");
+        opt.textContent = String(i).padStart(2,"0");
+        sel.appendChild(opt);
+      }
+    }
+    fillSelect("d3hh",24);
+    fillSelect("d3mm",60);
+    fillSelect("d3ss",60);
+    fillSelect("t4hh",24);
+    fillSelect("t4mm",60);
+    fillSelect("t4ss",60);
+
+    // 初期値を0に設定
+    ["d3hh","d3mm","d3ss","t4hh","t4mm","t4ss"].forEach(id=>{
+      document.getElementById(id).value="00";
+    });
+
+    function parseHMS(h,m,s){
+      return Number(h)*3600 + Number(m)*60 + Number(s);
+    }
+    function formatHMS(seconds){
+      const s = ((seconds % 86400)+86400)%86400;
+      const hh = String(Math.floor(s/3600)).padStart(2,"0");
+      const mm = String(Math.floor((s%3600)/60)).padStart(2,"0");
+      const ss = String(s%60).padStart(2,"0");
+      return `${hh}:${mm}:${ss}`;
+    }
+
+    const outUTC = document.getElementById("t1utc");
+    const outJST = document.getElementById("t1jst");
+
+    document.getElementById("calc").addEventListener("click",()=>{
+      const d2 = document.querySelector("input[name='d2']:checked").value;
+      const d2sec = parseHMS(...d2.split(":"));
+
+      const d3sec = parseHMS(
+        document.getElementById("d3hh").value,
+        document.getElementById("d3mm").value,
+        document.getElementById("d3ss").value
+      );
+      const t4sec = parseHMS(
+        document.getElementById("t4hh").value,
+        document.getElementById("t4mm").value,
+        document.getElementById("t4ss").value
+      );
+
+      const t1 = t4sec - d2sec - d3sec;
+      outUTC.textContent = formatHMS(t1);
+      outJST.textContent = formatHMS(t1+9*3600);
+    });
+
+    document.getElementById("reset").addEventListener("click",()=>{
+      document.querySelector("input[name='d2'][value='00:01:00']").checked = true;
+      ["d3hh","d3mm","d3ss","t4hh","t4mm","t4ss"].forEach(id=>{
+        document.getElementById(id).value="00";
+      });
+      outUTC.textContent="—";
+      outJST.textContent="—";
+    });
+  </script>
+</body>
+</html>
