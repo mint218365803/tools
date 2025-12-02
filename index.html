@@ -70,6 +70,11 @@
     }
     .result {
       margin-top: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .result-box {
       padding: 20px;
       background: #1b263b;
       border: 2px solid #457b9d;
@@ -78,21 +83,23 @@
       font-size: 28px;
       box-shadow: inset 0 0 20px #1e6091;
     }
-    .result table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    .result td {
-      padding: 6px 12px;
-      font-size: 28px;
-      vertical-align: middle;
-    }
-    .result td:first-child {
-      font-weight: bold;
-    }
-    .result span {
+    .result-box span {
+      display: block;
+      margin-top: 10px;
       color: #a8dadc;
       font-size: 32px;
+    }
+    /* UTC専用の強調スタイル */
+    .result-box.utc {
+      border: 3px solid #ffcc00;
+      background: #2a2a1b;
+      box-shadow: 0 0 25px #ffd60a, inset 0 0 20px #ffcc00;
+      color: #fff3b0;
+    }
+    .result-box.utc span {
+      color: #ffd60a;
+      font-size: 36px;
+      text-shadow: 0 0 12px #ffcc00;
     }
   </style>
 </head>
@@ -130,16 +137,14 @@
   </div>
 
   <div class="result">
-    <table>
-      <tr>
-        <td>集結開始時刻（UTC）:</td>
-        <td><span id="t1utc">—</span></td>
-      </tr>
-      <tr>
-        <td>集結開始時刻（JST）:</td>
-        <td><span id="t1jst">—</span></td>
-      </tr>
-    </table>
+    <div class="result-box utc">
+      集結開始時刻（UTC）:
+      <span id="t1utc">—</span>
+    </div>
+    <div class="result-box">
+      集結開始時刻（JST）:
+      <span id="t1jst">—</span>
+    </div>
   </div>
 
   <script>
