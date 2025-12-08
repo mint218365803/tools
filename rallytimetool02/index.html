@@ -1,1 +1,41 @@
-
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>❄️集結時刻計算❄️</title><meta name="viewport" content="width=device-width,initial-scale=1.0"><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Comic+Neue:wght@700&display=swap" rel="stylesheet"><style>
+body{font-family:'Noto Sans JP','Comic Neue',sans-serif;font-size:14px;padding:6px;background:#0f1626;color:#eee;line-height:1.6}
+h1{text-align:center;font-size:20px;font-weight:bold;margin-bottom:32px;color:#cce6ff;text-shadow:1px 1px 2px #000;line-height:1.8}
+table{width:100%;border-collapse:collapse;margin-top:10px;background:#1a1d2a}
+th,td{border:1px solid #333;padding:4px;text-align:center;font-size:13px}
+th:nth-child(1),td:nth-child(1){width:80px}
+th:nth-child(2),td:nth-child(2){width:140px}
+th:nth-child(3),td:nth-child(3){width:120px;font-weight:bold;color:#ff9999;background:#2a1f2f;text-shadow:0 0 1px #d00;font-size:16px}
+input,select,textarea{font-size:16px}
+.name-input{padding:2px;width:90px;text-align:left;background:#1f1f2a;color:#eee;border:1px solid #444}
+.march-select{display:inline-block;white-space:nowrap}
+.march-select select{width:54px;padding:1px;margin:0;background:#1f1f2a;color:#eee;border:1px solid #444}
+.colon{margin:0 2px}
+button{font-size:14px;padding:6px 12px;margin-right:4px;margin-top:8px;font-family:'Comic Neue','Noto Sans JP',sans-serif;border:none;border-radius:6px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.3);transition:background .3s}
+button:nth-of-type(1){background:linear-gradient(to bottom,#ff9933,#ff6600);color:#fff}
+button:nth-of-type(1):hover{background:linear-gradient(to bottom,#ffb366,#ff6600)}
+button:nth-of-type(2),button:nth-of-type(3){background:#4a90e2;color:#fff}
+button:nth-of-type(2):hover,button:nth-of-type(3):hover{background:#6bb3ff}
+label[for="copyArea"]{display:block;margin-top:16px;font-size:12px;color:#cce6ff}
+textarea{width:100%;margin-top:4px;padding:6px;box-sizing:border-box;background:#1f1f2a;color:#eee;border:1px solid #444;font-family:monospace;font-size:10px;height:200px}
+#impactHour,#impactMinute,#impactSecond{background:#1f1f2a;color:#eee;border:1px solid #444}
+</style></head><body>
+<h1>❄️集結時刻計算❄️</h1>
+<div style="margin-bottom:10px;"><label style="font-size:16px;">集結時間：</label><input type="radio" name="assembly" value="60" checked>1分 <input type="radio" name="assembly" value="300">5分</div>
+<div style="margin-bottom:30px;"><label style="font-size:16px;">着弾時刻(UTC)：</label><select id="impactHour"></select>時 <select id="impactMinute"></select>分 <select id="impactSecond"></select>秒</div>
+<table><tr><th>集結者</th><th>行軍時間(分:秒)</th><th>集結開始時刻<br>(UTC)</th></tr>
+<tr><td><input type="text" id="name0" maxlength="6" class="name-input"></td><td><div class="march-select"><select id="marchMin0"></select><span class="colon">:</span><select id="marchSec0"></select></div></td><td id="result0"></td></tr>
+<tr><td><input type="text" id="name1" maxlength="6" class="name-input"></td><td><div class="march-select"><select id="marchMin1"></select><span class="colon">:</span><select id="marchSec1"></select></div></td><td id="result1"></td></tr>
+<tr><td><input type="text" id="name2" maxlength="6" class="name-input"></td><td><div class="march-select"><select id="marchMin2"></select><span class="colon">:</span><select id="marchSec2"></select></div></td><td id="result2"></td></tr>
+<tr><td><input type="text" id="name3" maxlength="6" class="name-input"></td><td><div class="march-select"><select id="marchMin3"></select><span class="colon">:</span><select id="marchSec3"></select></div></td><td id="result3"></td></tr>
+<tr><td><input type="text" id="name4" maxlength="6" class="name-input"></td><td><div class="march-select"><select id="marchMin4"></select><span class="colon">:</span><select id="marchSec4"></select></div></td><td id="result4"></td></tr></table>
+<div><button onclick="calculate()">計算</button><button onclick="resetForm()">リセット</button><button onclick="copyResults()">コピー</button></div>
+<label for="copyArea">(コピー結果)</label>
+<textarea id="copyArea" rows="10" readonly></textarea>
+<script>
+function fillSelect(id,max){const s=document.getElementById(id);for(let i=0;i<=max;i++){const o=document.createElement("option");o.value=o.text=i.toString().padStart(2,"0");s.add(o)}}
+fillSelect("impactHour",23);fillSelect("impactMinute",59);fillSelect("impactSecond",59);for(let i=0;i<5;i++){fillSelect("marchMin"+i,59);fillSelect("marchSec"+i,59);}
+function calculate(){const a=parseInt(document.querySelector('input[name="assembly"]:checked').value),h=parseInt(impactHour.value),m=parseInt(impactMinute.value),s=parseInt(impactSecond.value),impact=h*3600+m*60+s;for(let i=0;i<5;i++){const march=parseInt(document.getElementById("marchMin"+i).value)*60+parseInt(document.getElementById("marchSec"+i).value);if(march>0){let start=impact-a-march;if(start<0)start+=86400;const hh=String(Math.floor(start/3600)).padStart(2,"0"),mm=String(Math.floor((start%3600)/60)).padStart(2,"0"),ss=String(start%60).padStart(2,"0");document.getElementById("result"+i).innerText=`${hh}:${mm}:${ss}`}else{document.getElementById("result"+i).innerText=""}}}
+function resetForm(){document.querySelectorAll("input[type=text]").forEach(e=>e.value="");for(let i=0;i<5;i++){document.getElementById("marchMin"+i).value="00";document.getElementById("marchSec"+i).value="00";document.getElementById("result"+i).innerText=""}impactHour.value="00";impactMinute.value="00";impactSecond.value="00";copyArea.value=""}
+function copyResults(){let t="集結開始UTC(行軍) 集結者\n--------------- ----------\n";for(let i=0;i<5;i++){const n=document.getElementById("name"+i).value||"-",m=`${document.getElementById("marchMin"+i).value}:${document.getElementById("marchSec"+i).value}`,r=document.getElementById("result"+i).innerText;if(r)t+=`${r}(${m}) ${n}\n`}copyArea.value=t;copyArea.select();document.execCommand("copy");copyArea.setSelectionRange(0,0);alert("コピーしました！")}
+</script></body></html>
